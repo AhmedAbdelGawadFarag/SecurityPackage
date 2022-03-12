@@ -10,17 +10,83 @@ namespace SecurityLibrary
     {
         public string Analyse(string plainText, string cipherText)
         {
-            throw new NotImplementedException();
+            plainText = plainText.ToLower();
+            cipherText = cipherText.ToLower();
+
+            char[] arr = new char[27];
+
+            string ans = "";
+
+            Dictionary<char, bool> mp = new Dictionary<char, bool>();
+            
+            for(int i = 0; i < plainText.Length; i++)
+            {
+                arr[plainText[i] - 'a'] = cipherText[i];
+
+                if(!mp.ContainsKey(cipherText[i]))
+                mp.Add(cipherText[i],true);
+
+            }
+
+            string notAssignedChar="";
+
+
+            for(char c='a';c<='z';c++)
+            {
+                if (!mp.ContainsKey(c))
+                    notAssignedChar += c;
+                
+            }
+            
+            for(int i = 0; i <26; i++)
+            {
+                if (arr[i] == '\0')
+                {
+                    arr[i] = notAssignedChar[notAssignedChar.Length - 1];
+                    ans += notAssignedChar[notAssignedChar.Length - 1];
+                    notAssignedChar = notAssignedChar.Remove(notAssignedChar.Length - 1,1);
+                }
+                else
+                    ans += arr[i];
+            }
+
+            return ans;
         }
 
         public string Decrypt(string cipherText, string key)
         {
-            throw new NotImplementedException();
+            cipherText = cipherText.ToLower();
+            key = key.ToLower();
+
+            string ans = "";
+            Dictionary<char, char> mp = new Dictionary<char, char>();
+
+            char c = 'a';
+            for(int i=0; i < key.Length; i++,c++)
+            {
+                mp.Add(key[i],c);
+            }
+            
+            for (int i = 0; i < cipherText.Length; i++)
+            {
+                ans += mp[cipherText[i]];
+            }
+
+            return ans;
         }
 
         public string Encrypt(string plainText, string key)
         {
-            throw new NotImplementedException();
+            plainText = plainText.ToLower();
+            key = key.ToLower();
+
+            string ans = "";
+            for(int i = 0; i < plainText.Length; i++)
+            {
+                ans += key[plainText[i]-'a'];   
+            }
+
+            return ans;
         }
 
         /// <summary>
@@ -56,7 +122,42 @@ namespace SecurityLibrary
         /// <returns>Plain text</returns>
         public string AnalyseUsingCharFrequency(string cipher)
         {
-            throw new NotImplementedException();
+            cipher = cipher.ToLower();
+
+
+            Tuple<int,char>[] arr = new Tuple<int,char>[26];
+
+            for (int i = 0; i < 26; i++) arr[i] = new Tuple<int, char>(0,'0');
+            for(int i = 0; i < cipher.Length; i++)
+            {
+                arr[cipher[i]-'a'] = new Tuple<int, char>(arr[cipher[i]-'a'].Item1 + 1,cipher[i]);
+            }
+
+            
+            Array.Sort(arr);
+
+            string mostFreq = "ETAOINSRHLDCUMFPGWYBVKXJQZ";
+            mostFreq = mostFreq.ToLower();
+
+            
+            Dictionary<char, char> mp = new Dictionary<char, char>();
+            for (int i = 25,j=0; i >= 0; i--,j++)
+            {
+
+                if (!mp.ContainsKey(arr[i].Item2))
+                {
+                    mp.Add(arr[i].Item2,mostFreq[j]);
+                }
+            }
+
+            string ans = "";
+
+            for(int i = 0; i < cipher.Length; i++)
+            {
+                ans += mp[cipher[i]];
+            }
+           
+            return ans;
         }
     }
 }
