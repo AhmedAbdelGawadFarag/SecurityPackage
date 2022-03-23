@@ -145,7 +145,7 @@ namespace SecurityPackageTest
         #endregion
 
         #region string test cases [Bonus]
-        /*
+        
         [Ignore]
         [TestMethod]
         public void HillCipherTestEnc1()
@@ -291,7 +291,7 @@ namespace SecurityPackageTest
             string key = algorithm.Analyse3By3Key(mainPlain, cipherS3);
             Assert.IsTrue(key.Equals(keyS3, StringComparison.InvariantCultureIgnoreCase));
         }
-        */
+        
         #endregion      
         
     }
