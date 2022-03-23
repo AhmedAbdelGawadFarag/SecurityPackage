@@ -13,33 +13,67 @@ namespace SecurityLibrary
     {
         public List<int> Analyse(List<int> plainText, List<int> cipherText)
         {
-            throw new NotImplementedException();
+            List<List<int>> PT = InitMatrix(2, 2);
+            List<List<int>> CT = InitMatrix(2, 2);
 
+            int indx = 0;
+            for(int i = 0; i < 2; ++i)
+            {
+                for(int j = 0; j < 2; ++j)
+                {
+                    PT[i][j] = plainText[indx];
+                    CT[i][j] = cipherText[indx];
+                    indx++;
+
+                }
+            }
+
+           for(int r1c1 = 0; r1c1 <= 25; ++r1c1)
+            {
+                for(int r1c2 = 0; r1c2 <= 25; ++r1c2)
+                {
+                    for(int r2c1 = 0; r2c1 <= 25; ++r2c1)
+                    {
+                        for(int r2c2 = 0; r2c2 <= 25; ++r2c2)
+                        {
+                            List<List<int>> Key = InitMatrix(2,2);
+                            Key[0][0] = r1c1; Key[0][1] = r1c2;
+                            Key[1][0] = r2c1; Key[1][1] = r2c2;
+                            if(IsCorrectKey(plainText, cipherText, Key))
+                            {
+                                return FlattenMatrix(Key);
+                            }
+                           
+                        }
+                    }
+                }
+            }
+            throw new InvalidAnlysisException();
 
         }
 
         public List<int> Decrypt(List<int> cipherText, List<int> key)
-        {
-
-            if (!IsValidKey(key))
-                throw new InvalidAnlysisException();
-
+        { 
             int size = (int)Math.Sqrt(key.Count);
             List<int> res = new List<int>();
-            List<List<int>> InvKey = GetKeyInv(key);
+            List<List<int>> Key = CreateKeyMatrix(key);
+
+            if (!IsValidKey(Key))
+                throw new InvalidAnlysisException();
+
+            List<List<int>> InvKey = GetMatInv(Key);
 
             for (int i = 0; i < cipherText.Count; i += size)
             {
-                List<int> CT = new List<int>();
+                List<List<int>> CT = InitMatrix(size, 1);
                 for (int j = i; j < i + size; ++j)
-                    CT.Add(cipherText[j]);
-
-                List<int> PT = MulMatrix(InvKey, CT);
+                    CT[j-i][0] = cipherText[j];
                 
-                foreach(int p in PT)
-                {
-                    res.Add(p);
-                }
+                List<List<int> > PT = MulMatrix(InvKey, CT);
+
+                List<int> flatPT = FlattenMatrix(PT);
+                foreach (int c in flatPT)
+                    res.Add(c);
             }
             return res;
       
@@ -48,25 +82,26 @@ namespace SecurityLibrary
 
         public List<int> Encrypt(List<int> plainText, List<int> key)
         {
-            if (!IsValidKey(key))
-                throw new InvalidAnlysisException();
-
+         
             int len = (int)Math.Sqrt(key.Count);
             List<int> res = new List<int>();
-
             List<List<int>> K = CreateKeyMatrix(key);
-            for(int i = 0; i < plainText.Count; i += len)
-            {
-                List<int> PT = new List<int>();
-                for (int j = i; j < i + len; ++j)
-                    PT.Add(plainText[j]);
 
-                List<int> CT = MulMatrix(K, PT);
-                
-                foreach(int c in CT)
-                {
+            if (!IsValidKey(K))
+                throw new InvalidAnlysisException();
+
+            for (int i = 0; i < plainText.Count; i += len)
+            {
+               List<List<int> > PT = InitMatrix(len,1);
+                for (int j = i; j < i + len; ++j)
+                    PT[j-i][0] = plainText[j];
+
+                List<List<int> > CT = MulMatrix(K, PT);
+
+                List<int> flatCT = FlattenMatrix(CT);
+                foreach (int c in flatCT)
                     res.Add(c);
-                }
+                
             }
             return res;
         }
@@ -74,10 +109,113 @@ namespace SecurityLibrary
 
         public List<int> Analyse3By3Key(List<int> plainText, List<int> cipherText)
         {
-            throw new InvalidAnlysisException();
+
+            List<List<int>> PT = InitMatrix(3,3);
+            List<List<int>> CT = InitMatrix(3,3);
+           
+            int indx = 0;
+            for(int i = 0; i < 3; ++i)
+            {
+                for(int j = 0; j < 3; ++j)
+                {
+                    PT[j][i] = plainText[indx];
+                    CT[j][i] = cipherText[indx];
+                    indx++;
+
+                }
+            }
+            List<List<int>> InvPT = GetMatInv(PT);
+            List<List<int> > Key = MulMatrix(CT, InvPT);
+
+            if (!IsValidKey(Key))
+                throw new InvalidAnlysisException();
+
+            List<int> flatKey = FlattenMatrix(Key);
+            return flatKey;
+
         }
 
-        public List< List<int> > CreateKeyMatrix (List<int> key)
+        // Strings 
+        public string Analyse(string plainText, string cipherText)
+        {
+            List<int> PT = StringToList(plainText.ToUpper());
+            List<int> CT = StringToList(cipherText.ToUpper());
+            List<int> Key = Analyse(PT, CT);
+            string txtKey = ListToString(Key);
+            return txtKey;
+        }
+
+
+        public string Decrypt(string cipherText, string key)
+        {
+            List<int> CT = StringToList(cipherText.ToUpper());
+            List<int> Key = StringToList(key.ToUpper());
+            List<int> PT = Decrypt(CT, Key);
+            string txtPT = ListToString(PT);
+            return txtPT;
+        }
+
+
+
+        public string Encrypt(string plainText, string key)
+        {
+            List<int> PT = StringToList(plainText.ToUpper());
+            foreach(var x in PT)
+            {
+                Console.Write(x);
+                Console.Write(' ');
+            }
+            Console.WriteLine();
+            List<int> Key = StringToList(key.ToUpper());
+            List<int> CT = Encrypt(PT, Key);
+            string txtCT = ListToString(CT);
+            return txtCT;
+        }
+
+
+
+        public string Analyse3By3Key(string plainText, string cipherText)
+        {
+            List<int> PT = StringToList(plainText.ToUpper());
+            List<int> CT = StringToList(cipherText.ToUpper());
+            List<int> Key = Analyse3By3Key(PT, CT);
+            string txtKey = ListToString(Key);
+            return txtKey;
+        }
+
+        bool IsCorrectKey(List<int> plainText, List<int> cipherText, List<List<int>> Key)
+        {
+
+            if (!IsValidKey(Key))
+                return false;
+            List<int> res = new List<int>();
+            int len = 2;
+
+            for (int i = 0; i < plainText.Count; i += len)
+            {
+                List<List<int>> PT = InitMatrix(len, 1);
+                for (int j = i; j < i + len; ++j)
+                    PT[j - i][0] = plainText[j];
+
+                List<List<int>> CT = MulMatrix(Key, PT);
+
+                List<int> flatCT = FlattenMatrix(CT);
+                foreach (int c in flatCT)
+                    res.Add(c);
+
+            }
+            return IsEqual(res, cipherText);
+        }
+        bool IsEqual(List<int> a, List<int> b)
+        {
+            for(int i = 0; i < a.Count; ++i)
+            {
+                if (a[i] != b[i])
+                    return false;
+            }
+            return true;
+        }
+        private List< List<int> > CreateKeyMatrix (List<int> key)
         {
             int len = (int)Math.Sqrt(key.Count);
 
@@ -95,22 +233,24 @@ namespace SecurityLibrary
             }
             return matrix;
         }
-        public List<int> MulMatrix(List<List<int>> K, List<int> PT)
+        private List<List<int> >  MulMatrix(List<List<int>> K, List<List<int> >  PT)
         {
-            List<int> res = new List<int>() ;
-            for (int i = 0; i < K.Count; ++i)
-                res.Add(0);
-
+            List<List<int>> res = InitMatrix(K[0].Count, PT[0].Count);
+            
             for(int i = 0; i < K.Count; ++i)
             {
-                for(int j = 0; j < K.Count; ++j)
+                for(int j = 0; j < PT[0].Count; ++j)
                 {
-                    res[i] = AddInt(res[i], MulInt(K[i][j], PT[j]));
+                    for(int u = 0; u < K.Count; ++u)
+                    {
+                        
+                            res[i][j] = AddInt(res[i][j], MulInt(K[i][u], PT[u][j]));
+                    }
                 }
             }
             return res;
         }
-        int GetMatDet(List<List<int>> Key)
+        private int GetMatDet(List<List<int>> Key)
         {
             int det = 0;
             if(Key.Count == 2)
@@ -128,11 +268,11 @@ namespace SecurityLibrary
             }
             return det;
         }
-        public List<List<int>> GetKeyInv(List<int> K)
+        private List<List<int>> GetMatInv(List<List<int> > Key)
         {
-            int size = (int) Math.Sqrt(K.Count);
-            List<List<int>> Key = CreateKeyMatrix(K);
-            List<List<int>> InvKey = InitMatrix(size);
+            int size = Key.Count;
+     
+            List<List<int>> InvKey = InitMatrix(size, size);
 
             if (size == 2)
             {
@@ -169,7 +309,7 @@ namespace SecurityLibrary
 
             return T;
         }
-        public int GetDet(List<List<int>> Key, int x, int y)
+        private int GetDet(List<List<int>> Key, int x, int y)
         {
        
             List<int> vals = new List<int>();
@@ -186,7 +326,7 @@ namespace SecurityLibrary
             int det = SubInt( MulInt(mat[0][0], mat[1][1]), MulInt(mat[0][1], mat[1][0]));
             return det;
         }
-        int GetMulInv(int det)
+        private int GetMulInv(int det)
         {
             int res = -1;
             for(int i = 1; i < 26; ++i)
@@ -199,9 +339,8 @@ namespace SecurityLibrary
             }
             return res;
         }
-        bool IsValidKey(List<int> k)
+        private bool IsValidKey(List<List<int> >  Key)
         {
-            List<List<int>> Key = CreateKeyMatrix(k);
             for (int i = 0; i < Key.Count; ++i)
             {
                 for(int j = 0; j < Key.Count; ++j)
@@ -219,9 +358,9 @@ namespace SecurityLibrary
 
             return true;
         }
-        List<List<int> > GetTranspose(List<List<int>> mat)
+        private List<List<int> > GetTranspose(List<List<int>> mat)
         {
-            List<List<int>> res = InitMatrix(mat.Count);
+            List<List<int>> res = InitMatrix(mat.Count, mat.Count);
             if(mat.Count == 2)
             {
                 res[1][0] = ((mat[1][0] * -1) + 26) % 26;
@@ -242,33 +381,64 @@ namespace SecurityLibrary
             
             return res;
         }
-        public List<List<int>> InitMatrix(int size)
+        private List<List<int>> InitMatrix(int row, int col)
         {
             List<List<int>> res = new List<List<int>>();
-            for(int i = 0; i < size; ++i)
+            for(int i = 0; i < row; ++i)
             {
                 res.Add(new List<int> ());
-                for(int j = 0; j < size; ++j)
+                for(int j = 0; j < col; ++j)
                 {
                     res[i].Add(0);
                 }
             }
             return res;
         }
-        public int Gcd(int a, int b)
+        private List<int> StringToList(string text)
+        {
+            List<int> res = new List<int>();
+            foreach(char element in text)
+            {
+                res.Add((int)(element - 'A'));
+            }
+            return res;
+        }
+        private string ListToString(List<int> list)
+        {
+            string res = "";
+            foreach(int element in list)
+            {
+
+                res += Convert.ToChar('A' + element);
+            }
+            return res;
+        }
+        private List<int> FlattenMatrix  (List<List<int>> matrix)
+        {
+            List<int> flat = new List<int>();
+            for(int i = 0; i < matrix.Count; ++i)
+            {
+                for(int j = 0; j < matrix[0].Count; ++j)
+                {
+                    flat.Add(matrix[i][j]);
+                }
+            }
+            return flat;
+        }
+        private int Gcd(int a, int b)
         {
             return b == 0 ? a : Gcd(b, a % b);
         }
-        
-        public int MulInt(int a, int b)
+
+        private int MulInt(int a, int b)
         {
             return (((a * b) % 26) + 26) % 26;
         }
-        public int AddInt(int a, int b)
+        private int AddInt(int a, int b)
         {
             return (a + b + 26) % 26;
         }
-        public int SubInt(int a, int b)
+        private int SubInt(int a, int b)
         {
             return ((a - b) % 26 + 26) % 26;
         }
