@@ -290,7 +290,11 @@ namespace SecurityLibrary.AES
             {
                 for(int j = 0; j < 4; j++)
                 {
-                    cipherText += state[j, i];
+                    if (state[j, i].Length < 2)
+                    {
+                        state[j, i] = "0" + state[j, i];
+                    }
+                    cipherText += state[j, i].ToUpper();
                 }
             }
             return "0x" + cipherText;
