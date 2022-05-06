@@ -46,8 +46,8 @@ namespace SecurityLibrary.RSA
         }
         int modInverse(int a, int m)
         {
-            int i;
-            for (i = 1; i < m; i++)
+            
+            for (int i = 1; i < m; i++)
                 if (((a % m) * (i % m)) % m == 1)
                     return i;
             return 1;
